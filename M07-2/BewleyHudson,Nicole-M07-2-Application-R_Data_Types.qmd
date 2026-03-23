@@ -1,0 +1,608 @@
+---
+title: "M07-2-Application Assignment for R Data Types"
+author: "Nicole Bewley-Hudson"
+date: '`r format(Sys.time())`'
+format: 
+  html: 
+    theme: cosmo
+    toc: true
+    toc-location: right-body
+    toc_depth: 4
+    code-fold: false
+    code-line-numbers: true
+    code-link: true
+    number-sections: true
+    embed-resources: true
+    df-print: paged
+execute: 
+  freeze: auto
+  echo: fenced
+  warning: false
+  error: true
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(gapminder)
+library(nycflights13)
+library(lubridate)
+
+options(dplyr.summarise.inform = FALSE)
+```
+
+------------------------------------------------------------------------
+
+# Q1. Vectors
+
+Q1.1: Create a numeric vector called "stock_prices" with the following data points: 42.5, 43.0, 44.1, and 2.7. Next, verify the class of it.
+
+```{r}
+stock_prices <- c(42.5, 43.0, 44.1, 2.7)
+
+class(stock_prices)
+
+stock_prices
+```
+
+Q1.2: Create a character vector called "stock_company" consisting of the following company names: Microsoft, Apple, Facebook, and Tesla.
+
+```{r}
+stock_company <- c("Microsoft", "Apple", "Facebook", "Tesla")
+
+stock_company
+```
+
+Q1.3: Create a character vector called "stock_ticker" consisting of stock tickers corresponding to the companies in the "stock_company" vector: MSFT, AAPL, FB, and TSLA. Then verify its data type.
+
+```{r}
+stock_ticker <- c("MSFT", "AAPL", "FB", "TSLA")
+
+typeof(stock_ticker)
+
+stock_ticker
+```
+
+Q1.4: Create a logical vector called "make_cars" consisting of the four logical values: FALSE, FALSE, FALSE, and TRUE.
+
+```{r}
+make_cars <- c(FALSE, FALSE, FALSE, TRUE)
+
+make_cars
+```
+
+Q1.5: After that, add 5 to the vector "stock_prices" and assign the result to the same "stock_prices" vector, essentially updating the existing stock prices vector.
+
+```{r}
+stock_prices <- stock_prices + 5
+
+stock_prices
+```
+
+Q1.6: Name each element in "stock_prices" vector, using the "stock_company" vector that you created above, and print the stock_prices vector to confirm that each element has a company name associated with it.
+
+```{r}
+names(stock_prices) <- stock_company
+
+stock_prices
+```
+
+# Q2. Creating and cleaning a data frame in base R
+
+Q2.1: Create a data frame called "stock_info.df" which is composed of the four vectors created in exercises #2 and #3 above. Verify the number of rows and columns, and also display the summary.
+
+```{r}
+stock_info.df <- data.frame(
+  stock_prices,
+  stock_company,
+  stock_ticker,
+  make_cars
+)
+
+stock_info.df
+
+nrow(stock_info.df)
+ncol(stock_info.df)
+
+summary(stock_info.df)
+```
+
+Q2.2: (1) Let's suppose that there was a data entry error in "stock_prices" vector such that Tesla's original stock price was 42.7, not 2.7. Also, note that previously you updated the stock price by adding 5 to all elements in the stock_prices vector, making the updated stock price of Tesla 7.7. (2) Now that we know there was a data entry error, we need to update Tesla's stock price correctly in the data frame created earlier. In short, we need to replace 7.7 with 47.7, which would have been the correct stock price for Tesla in the previous exercise, had there not been an error in the first place. (3) Do the necessary coding to execute the correction to the stock_info.df data frame. Confirm the operation was successful by printing the data frame.
+
+```{r}
+stock_info.df[stock_info.df$stock_company == "Tesla", "stock_prices"] <- 47.7
+
+stock_info.df
+```
+
+# Q3. Adding a row or column to a data frame in base R
+
+Q3.1: (1) Add a new row to the bottom of the existing "stock_info.df" data frame with the following information: stock_prices = 50.4, stock_company = General Motors, stock_ticker = GM, and make_cars = TRUE. (2) Print out the updated data frame. (3) Do you see the row name of the last row is "1"? You may want to replace this with the correct name, "General Motors." Print the data frame again to confirm you fixed the problem.
+
+```{r}
+# Create a new row as a data frame
+new_row <- data.frame(
+  stock_prices = 50.4,
+  stock_company = "General Motors",
+  stock_ticker = "GM",
+  make_cars = TRUE
+)
+
+stock_info.df <- rbind(stock_info.df, new_row)
+
+stock_info.df
+```
+
+Q3.2: (1) Add a new column with the following column name and values: open_price = 47.3, 47.8, 49.5, 47.9 and 55.3. (2) Print out the updated data frame, "stock_info.df" to confirm your work.
+
+```{r}
+# Add new column
+stock_info.df$open_price <- c(47.3, 47.8, 49.5, 47.9, 55.3)
+
+# Print to confirm
+stock_info.df
+```
+
+# Q4. Creating a new column from existing columns and subsetting
+
+Q4.1: Now, create a new vector called "change_stock_prices_percent" and add it to the existing data frame to show if the stock increased or decreased its price at the end of the day compared to the beginning of the day.
+
+```{r}
+stock_info.df$change_stock_prices_percent <- 
+  (stock_info.df$stock_prices - stock_info.df$open_price) / 
+  stock_info.df$open_price * 100
+
+stock_info.df
+```
+
+Q4.2: Which stock has increased its value and which ones have decreased? Use the function "subset" to select the two types of stocks.
+
+```{r}
+increased_stocks <- subset(
+  stock_info.df,
+  change_stock_prices_percent > 0
+)
+
+increased_stocks
+
+decreased_stocks <- subset(
+  stock_info.df,
+  change_stock_prices_percent < 0
+)
+```
+
+::: {.callout-note}
+### Note
+
+- A positive value for `change_stock_prices_percent` indicates that the stock price increased from the opening price to the closing price.  
+- A negative value indicates that the stock price decreased over the same period.  
+- The `subset()` function is used to filter the data frame based on these conditions, allowing us to separate stocks that increased in value from those that decreased.
+:::
+
+# Q5. Matrix
+
+Create a matrix named "odd.mat" that consists of odd numbers starting with "1" with 10 columns and 5 rows. Do the task in both Base R and Tidyverse way, respectively.
+
+```{r}
+odd.mat <- matrix(
+  seq(from = 1, by = 2, length.out = 50),
+  nrow = 5,
+  ncol = 10
+)
+
+odd.mat
+```
+
+```{r}
+odd.mat_tidy <- seq(from = 1, by = 2, length.out = 50) |>
+  matrix(nrow = 5, ncol = 10)
+
+odd.mat_tidy
+```
+
+::: {.callout-note}
+### Note
+
+- The `seq()` function efficiently generates a sequence of odd numbers.
+
+- Both approaches produce the same matrix with 5 rows and 10 columns.
+
+- The second approach uses the pipe operator `|>` for a more modern workflow.
+
+:::
+
+# Q6. Strings: Sentences dataset
+
+The goal of this question is to generate insights about the frequencies of the use of the definite article, "The" in the English composition.
+
+Q6.1: From "sentences" data that comes with stringr, which is included in Tidyverse package, confirm that you can correctly identify the first word from each sentence correctly by showing the first word from each sentence for all the sentences in the dataset.
+
+```{r}
+# Extract first word from each sentence
+first_words <- word(sentences, 1)
+
+first_words
+```
+
+Q6.2: Then, extract those first words and print out the first 20 words in the list of words extracted. Make sure you delete any white spaces, if any, before and after each extracted word.
+
+```{r}
+# Trim whitespace and show first 20
+first_words_clean <- str_trim(first_words)
+
+head(first_words_clean, 20)
+```
+
+Q6.3: Out of the words you extracted, how many times does the word, "The," appear in the list?
+
+```{r}
+sum(first_words_clean == "The")
+```
+
+Q6.4: What proportion of the extracted words does "The" account for?
+
+```{r}
+sum(first_words_clean == "The") / length(first_words_clean)
+```
+
+Q6.5: Does the outcome surprise you? Explain why or why not.
+
+This was an interesting tool to use. I found the outcome especially insightful, and I am interested in how these string functions can be applied to other datasets. It highlights the value of text processing in identifying patterns and extracting meaningful insights from data.
+
+Q6.6: Calculate the number of sentences that start with the word, "The" again, this time, using only one chain of codes with a series of the piping operator, starting with the "sentences" data set. Next, using a similar operation, calculate the proportion again.
+
+```{r}
+sentences |>
+  word(1) |>
+  str_trim() |>
+  (\(x) sum(x == "The"))()
+sentences |>
+  word(1) |>
+  str_trim() |>
+  (\(x) mean(x == "The"))()
+```
+
+::: {.callout-note}
+### Note
+
+- The pipe operator `|>` allows multiple steps to be chained together in one clean workflow.
+- The `mean(x == "The")` expression calculates the proportion because TRUE values are treated as 1 and FALSE values as 0.
+
+:::
+
+# Q7. Strings: Baseball player stats in Lahman dataset
+
+From the "People" dataset in the Lahman package, get all John's and Joe's from the first name column and display how many Joe's and John's there are in the dataset. Visualize the count of the two first names in a chart too. As usual, make the chart presentable.
+
+```{r}
+name_counts <- Lahman::People |>
+  filter(nameFirst %in% c("John", "Joe")) |>
+  count(nameFirst)
+
+name_counts
+```
+
+```{r}
+# Create a clean bar chart
+name_counts |>
+  ggplot(aes(x = nameFirst, y = n, fill = nameFirst)) +
+  geom_col() +
+  labs(
+    title = "Count of Players Named John vs Joe",
+    x = "First Name",
+    y = "Count"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none")
+```
+
+# Q8. Factor-level ordering and Visualization
+
+Q8.1: (1) From the package, use "gapminder" dataset. Examine the dataset to know it first. (2) First, print out the level of the "continent" factor from the gapminder data set. (3) From the most recent year in the dataset, calculate the total population by the continents and print out the outcome. (4) Print out the continent and total population again by arranging the appearance of the continent in descending order of the size of the population. (5) Compare both tables produced in (2) and (3) and describe how the order is different. Note that you haven't changed the factor level yet. Also, state how you could change the level of the factor by the descending order of the population size. (6) Change the order of the level of the "continent" factor by the size of the continent's total population and save the change made to the continent by naming the data "gapminder1". Make sure you confirm the operation was successful.
+
+```{r}
+head(gapminder)
+
+str(gapminder)
+```
+
+```{r}
+# Examine dataset
+head(gapminder)
+```
+
+```{r}
+levels(gapminder$continent)
+```
+
+```{r}
+continent_pop_2007 <- gapminder |>
+  filter(year == max(year)) |>
+  group_by(continent) |>
+  summarise(total_population = sum(pop))
+
+continent_pop_2007
+```
+
+```{r}
+continent_pop_2007_desc <- continent_pop_2007 |>
+  arrange(desc(total_population))
+
+continent_pop_2007_desc
+```
+
+::: {.callout-note}
+### Note
+
+- The first table keeps the default factor order of the `continent` variable.
+
+- The second table uses `arrange(desc(total_population))` to change the row order.
+
+- This means the display order changes, but the underlying factor levels remain the same.
+
+- To change the factor levels themselves, the `continent` variable must be reordered based on total population.
+
+:::
+
+The first table is shown in the default factor order of the `continent` variable, while the second table is sorted by total population in descending order. This indicates that only the row order has changed, not the factor levels. To change the factor levels, the `continent` variable needs to be reordered using the population totals.
+
+Q8.2: Using the original gapminder data (not gapminder1), draw a chart that shows the total population by each continent in the year 2007, ordered by the size of the population in the chart. As usual, do this in one chain of codes and provide the necessary information and beautification to the chart to portray accurate communication to the viewers.
+
+```{r}
+gapminder |>
+  filter(year == 2007) |>
+  group_by(continent) |>
+  summarise(total_population = sum(pop)) |>
+  ggplot(aes(x = reorder(continent, total_population),
+             y = total_population,
+             fill = continent)) +
+  geom_col() +
+  coord_flip() +
+  labs(
+    title = "Total Population by Continent (2007)",
+    x = "Continent",
+    y = "Total Population"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none")
+```
+
+# Q9. Shortening Factor Levels: top or bottom 5 lists
+
+Q9.1: Let's first filter the unaltered gapminder dataset by the year 2007 and Asia continent and see how many countries there are in the filtered data. Do this using the piping operator all the time.
+
+```{r}
+asia_2007 <- gapminder |>
+  filter(year == 2007, continent == "Asia")
+
+asia_2007
+```
+
+Q9.2: How many Asian countries do you see?
+
+```{r}
+asia_2007 |>
+  count()
+```
+
+> There are 33 Asian countries. 
+
+Q9.3: Given the number of countries, it seems like a good idea to present the top 5 and bottom 5 countries, one at a time, and order the countries by life expectancy. Let's first focus on the top 5 list. Do appropriate wrangling and visualization for the top 5 list.
+
+```{r}
+top5_asia_lifeexp <- gapminder |>
+  filter(year == 2007, continent == "Asia") |>
+  slice_max(order_by = lifeExp, n = 5) |>
+  arrange(lifeExp)
+
+top5_asia_lifeexp
+```
+
+```{r}
+top5_plot <- top5_asia_lifeexp |>
+  ggplot(aes(x = reorder(country, lifeExp), y = lifeExp, fill = country)) +
+  geom_col() +
+  coord_flip() +
+  labs(
+    title = "Top 5 Asian Countries",
+    x = "Country",
+    y = "Life Expectancy"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none")
+
+top5_plot
+```
+
+Q9.4: Do similar wrangling and visualization to show the bottom 5 countries. This time, let's put the two charts together and show them in one pallet by using the patchwork package.
+
+```{r}
+bottom5_asia_lifeexp <- gapminder |>
+  filter(year == 2007, continent == "Asia") |>
+  slice_min(order_by = lifeExp, n = 5) |>
+  arrange(lifeExp)
+
+bottom5_asia_lifeexp
+```
+
+```{r}
+bottom5_plot <- bottom5_asia_lifeexp |>
+  ggplot(aes(x = reorder(country, lifeExp), y = lifeExp, fill = country)) +
+  geom_col() +
+  coord_flip() +
+  labs(
+    title = "Bottom 5 Asian Countries",
+    x = "Country",
+    y = "Life Expectancy"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none")
+
+bottom5_plot
+```
+
+```{r}
+top5_plot
+bottom5_plot
+```
+
+```{r}
+class(top5_plot)
+class(bottom5_plot)
+```
+
+```{r}
+library(patchwork)
+
+wrap_plots(top5_plot, bottom5_plot, ncol = 2) +
+  plot_annotation(title = "Top and Bottom 5 Asian Countries by Life Expectancy (2007)")
+```
+
+# Q10. Date-time data type
+
+The goal is to deal with date-time data and visualize the data. The data is from the "flights" dataset that comes with the nycflights13 package.
+
+Q10.1: Look up the help to understand the data and also run appropriate functions to understand the data.
+
+```{r}
+head(flights)
+
+glimpse(flights)
+
+summary(flights)
+```
+
+Q10.2: Include only the records that do not have missing values in the following three variables: dep_time, arr_time, and air_time. Convert "dep_time" and "arr_time" to date-time data type, using "year", "month", and "day" as well as the hour and minutes information from "dep_time" and "arr_time". Then select only some useful columns we will need to draw a chart since there are too many columns to display. Those variables are "origin", "dest", "air_time", and any variables that start with 'dep' or 'arr.' Let's save this subset of the data as "flights_lub."
+
+```{r}
+flights_lub <- flights |>
+  filter(
+    !is.na(dep_time),
+    !is.na(arr_time),
+    !is.na(air_time)
+  ) |>
+  mutate(
+    dep_hour = dep_time %/% 100,
+    dep_minute = dep_time %% 100,
+    arr_hour = arr_time %/% 100,
+    arr_minute = arr_time %% 100,
+    dep_time = make_datetime(year, month, day, dep_hour, dep_minute),
+    arr_time = make_datetime(year, month, day, arr_hour, arr_minute)
+  ) |>
+  select(origin, dest, air_time, dep_time, arr_time)
+
+flights_lub
+```
+
+Q10.3: Using the "dep_time" variable, display the frequency distribution of the count of flights departing from New York City over the entire year in 2013, from Jan. 1 to Dec. 31.
+
+```{r}
+flights_lub |>
+  mutate(dep_date = as_date(dep_time)) |>
+  count(dep_date) |>
+  ggplot(aes(x = dep_date, y = n)) +
+  geom_line() +
+  labs(
+    title = "Daily Number of Flights Departing from New York City in 2013",
+    x = "Date",
+    y = "Number of Flights"
+  ) +
+  theme_minimal()
+```
+
+::: {.callout-note}
+### Note
+
+- The `as_date()` function extracts only the date from the datetime variable, removing the time component.
+
+- The `count()` function calculates the number of flights departing on each day.
+
+- The line chart shows how the number of daily departures changes throughout the year, making it easier to observe trends and patterns over time.
+
+:::
+
+Q10.4: This time, let's zoom in on just one day, the Fourth of July holiday. Display the frequency distribution of the flights departing from New York City during the entire day.
+
+```{r}
+flights_lub |>
+  filter(as_date(dep_time) == ymd("2013-07-04")) |>
+  ggplot(aes(x = dep_time)) +
+  geom_histogram(binwidth = 3600) +
+  labs(
+    title = "Distribution of Flight Departures on July 4, 2013",
+    x = "Departure Time",
+    y = "Number of Flights"
+  ) +
+  theme_minimal()
+```
+
+::: {.callout-note}
+### Note
+
+- The `filter()` function isolates flights that departed on July 4, 2013.
+
+- The histogram displays how flights are distributed throughout the day.
+
+- The `binwidth = 3600` groups departures into one-hour intervals because datetime values are stored in seconds.
+
+:::
+
+Q10.5: Using the "flights_lub" dataset, create the "travel_time" variable by subtracting "dep_time" from "arr_time". Since arrival occurs later than departure, arr_time minus dep_time should be positive. Check this logic by sorting the data by the ascending order of "travel_time". Was the expectation met? Why were there negative minutes?
+
+```{r}
+flights_lub <- flights_lub |>
+  mutate(travel_time = arr_time - dep_time)
+
+flights_lub |>
+  arrange(travel_time)
+```
+
+> The expectation was not fully met because some travel times appear negative. This occurs because certain flights are overnight flights that depart late at night and arrive after midnight. Since both departure and arrival times were initially assigned the same calendar date, the arrival time can appear earlier than the departure time, resulting in negative travel times. To fix this, we need to adjust the arrival time for overnight flights by adding one day to it before calculating travel time.
+
+Q10.6: That was because those flights were overnight flights. The original dep_time had only hour and minutes information before day information was added and the time of arrival is smaller than the time of departure for the overnight flights. Thus, we need to fix "arr_time" by adding one more day when there was such an overnight flight. Do the appropriate adjustment prior to the travel_time variable creation in the chain of codes connected through a series of pipe operators. Also, convert the travel_time to a numeric data type. Show that there are no negative minutes anymore.
+
+```{r}
+flights_lub <- flights |>
+  filter(
+    !is.na(dep_time),
+    !is.na(arr_time),
+    !is.na(air_time)
+  ) |>
+  mutate(
+    dep_hour = dep_time %/% 100,
+    dep_minute = dep_time %% 100,
+    arr_hour = arr_time %/% 100,
+    arr_minute = arr_time %% 100,
+    dep_time = make_datetime(year, month, day, dep_hour, dep_minute),
+    arr_time = make_datetime(year, month, day, arr_hour, arr_minute),
+    arr_time = if_else(arr_time < dep_time, arr_time + days(1), arr_time),
+    travel_time = as.numeric(arr_time - dep_time, units = "mins")
+  ) |>
+select(origin, dest, air_time, dep_time, arr_time, travel_time)
+
+flights_lub |>
+  arrange(travel_time)
+```
+
+Q10.7: Once again, zoom in on the Fourth of July. How many flights departed from New York City on that day? Create a plot that shows the relationship between the "travel_time" and "air_time". What do you infer from it? Why is there not a perfect association?
+
+```{r}
+flights_lub |>
+  filter(as_date(dep_time) == ymd("2013-07-04")) |>
+  count()
+```
+
+```{r}
+flights_lub |>
+  filter(as_date(dep_time) == ymd("2013-07-04")) |>
+  ggplot(aes(x = air_time, y = travel_time)) +
+  geom_point(alpha = 0.5) +
+  labs(
+    title = "Travel Time vs Air Time on July 4, 2013",
+    x = "Air Time (minutes)",
+    y = "Travel Time (minutes)"
+  ) +
+  theme_minimal()
+```
+
+> The scatterplot shows a strong positive relationship between air_time and travel_time, meaning that flights with longer air times generally also have longer travel times. However, the relationship is not perfectly linear. There is noticeable variation around the trend, which suggests that travel_time includes more than just time spent in the air. Factors such as taxi time, delays, and time spent waiting before takeoff or after landing contribute to the total travel time, causing the points to spread out rather than fall on a perfect line.
+
